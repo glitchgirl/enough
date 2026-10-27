@@ -1,0 +1,94 @@
+{
+  "entities": {
+    "CapacityLog": {
+      "title": "CapacityLog",
+      "description": "Daily user capacity battery check-in and suggested mode",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "date": { "type": "string", "maxLength": 32 },
+        "capacityLevel": { "type": "number" },
+        "mode": { "type": "string", "enum": ["survival", "maintenance", "growth"] },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "capacityLevel", "mode", "createdAt"]
+    },
+    "ImperfectionReflection": {
+      "title": "ImperfectionReflection",
+      "description": "Reflections on intentional imperfection exposure challenges",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "challengeId": { "type": "string", "maxLength": 64 },
+        "tier": { "type": "number" },
+        "title": { "type": "string", "maxLength": 200 },
+        "reflection": { "type": "string", "maxLength": 2000 },
+        "didWorldEnd": { "type": "boolean" },
+        "feeling": { "type": "string", "maxLength": 200 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "challengeId", "tier", "title", "didWorldEnd", "createdAt"]
+    },
+    "BoundaryLog": {
+      "title": "BoundaryLog",
+      "description": "Record of boundaries set and time/energy protected",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "category": { "type": "string", "maxLength": 64 },
+        "situation": { "type": "string", "maxLength": 300 },
+        "scriptUsed": { "type": "string", "maxLength": 1000 },
+        "reflection": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "category", "situation", "createdAt"]
+    },
+    "DoneEntry": {
+      "title": "DoneEntry",
+      "description": "Done list item acknowledging what was actually accomplished",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "text": { "type": "string", "maxLength": 300 },
+        "category": { "type": "string", "enum": ["care", "work", "rest", "survival"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "text", "category", "createdAt"]
+    },
+    "GoodEnoughEntry": {
+      "title": "GoodEnoughEntry",
+      "description": "Good enough acknowledgment celebrating sufficientism over perfection",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "taskName": { "type": "string", "maxLength": 200 },
+        "whyEnough": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "taskName", "whyEnough", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/capacityLogs/{logId}": {
+      "schema": "CapacityLog",
+      "description": "User capacity check-ins"
+    },
+    "/users/{userId}/imperfections/{reflectionId}": {
+      "schema": "ImperfectionReflection",
+      "description": "User exposure therapy reflections"
+    },
+    "/users/{userId}/boundaries/{boundaryId}": {
+      "schema": "BoundaryLog",
+      "description": "User boundaries recorded and time protected"
+    },
+    "/users/{userId}/doneEntries/{entryId}": {
+      "schema": "DoneEntry",
+      "description": "User Done items"
+    },
+    "/users/{userId}/goodEnough/{goodEnoughId}": {
+      "schema": "GoodEnoughEntry",
+      "description": "User good-enough sufficientism logs"
+    }
+  }
+}

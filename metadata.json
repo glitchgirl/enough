@@ -1,0 +1,6 @@
+{
+  "name": "Enough",
+  "description": "The art of being a human, not a machine. An anti-productivity and burnout recovery application for perfectionists.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

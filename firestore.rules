@@ -1,0 +1,104 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidCapacityLog(data, userId) {
+      return data.keys().hasAll(['userId', 'date', 'capacityLevel', 'mode', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'date', 'capacityLevel', 'mode', 'notes', 'createdAt']) &&
+        data.userId == userId &&
+        data.date is string && data.date.size() <= 32 &&
+        data.capacityLevel is number &&
+        (data.mode == 'survival' || data.mode == 'maintenance' || data.mode == 'growth') &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000));
+    }
+
+    function isValidImperfection(data, userId) {
+      return data.keys().hasAll(['userId', 'challengeId', 'tier', 'title', 'didWorldEnd', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'challengeId', 'tier', 'title', 'reflection', 'didWorldEnd', 'feeling', 'createdAt']) &&
+        data.userId == userId &&
+        data.challengeId is string && data.challengeId.size() <= 64 &&
+        data.tier is number &&
+        data.title is string && data.title.size() <= 200 &&
+        data.didWorldEnd is bool &&
+        (!('reflection' in data) || (data.reflection is string && data.reflection.size() <= 2000)) &&
+        (!('feeling' in data) || (data.feeling is string && data.feeling.size() <= 200));
+    }
+
+    function isValidBoundary(data, userId) {
+      return data.keys().hasAll(['userId', 'category', 'situation', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'category', 'situation', 'scriptUsed', 'reflection', 'createdAt']) &&
+        data.userId == userId &&
+        data.category is string && data.category.size() <= 64 &&
+        data.situation is string && data.situation.size() <= 300 &&
+        (!('scriptUsed' in data) || (data.scriptUsed is string && data.scriptUsed.size() <= 1000)) &&
+        (!('reflection' in data) || (data.reflection is string && data.reflection.size() <= 1000));
+    }
+
+    function isValidDone(data, userId) {
+      return data.keys().hasAll(['userId', 'text', 'category', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'text', 'category', 'createdAt']) &&
+        data.userId == userId &&
+        data.text is string && data.text.size() <= 300 &&
+        (data.category == 'care' || data.category == 'work' || data.category == 'rest' || data.category == 'survival');
+    }
+
+    function isValidGoodEnough(data, userId) {
+      return data.keys().hasAll(['userId', 'taskName', 'whyEnough', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'taskName', 'whyEnough', 'createdAt']) &&
+        data.userId == userId &&
+        data.taskName is string && data.taskName.size() <= 200 &&
+        data.whyEnough is string && data.whyEnough.size() <= 1000;
+    }
+
+    match /users/{userId} {
+      allow get, write: if isOwner(userId) && isValidId(userId);
+
+      match /capacityLogs/{logId} {
+        allow get, delete: if isOwner(userId) && isValidId(logId);
+        allow list: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(logId) && isValidCapacityLog(request.resource.data, userId);
+      }
+
+      match /imperfections/{reflectionId} {
+        allow get, delete: if isOwner(userId) && isValidId(reflectionId);
+        allow list: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(reflectionId) && isValidImperfection(request.resource.data, userId);
+      }
+
+      match /boundaries/{boundaryId} {
+        allow get, delete: if isOwner(userId) && isValidId(boundaryId);
+        allow list: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(boundaryId) && isValidBoundary(request.resource.data, userId);
+      }
+
+      match /doneEntries/{entryId} {
+        allow get, delete: if isOwner(userId) && isValidId(entryId);
+        allow list: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(entryId) && isValidDone(request.resource.data, userId);
+      }
+
+      match /goodEnough/{goodEnoughId} {
+        allow get, delete: if isOwner(userId) && isValidId(goodEnoughId);
+        allow list: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidId(goodEnoughId) && isValidGoodEnough(request.resource.data, userId);
+      }
+    }
+  }
+}
